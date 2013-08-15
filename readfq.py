@@ -7,14 +7,15 @@ def readfq(fp): # this is a generator function
                     last = l[:-1] # save this line
                     break
         if not last: break
-        name, seqs, last = last[1:].partition(" ")[0], [], None
+        seq_info = last[1:].partition(" ")
+        name, extra_info, seqs, last = seq_info[0], seq_info[2], [], None
         for l in fp: # read the sequence
             if l[0] in '@+>':
                 last = l[:-1]
                 break
             seqs.append(l[:-1])
         if not last or last[0] != '+': # this is a fasta record
-            yield name, ''.join(seqs), None # yield a fasta record
+            yield name, extra_info, ''.join(seqs), None # yield a fasta record
             if not last: break
         else: # this is a fastq record
             seq, leng, seqs = ''.join(seqs), 0, []
@@ -23,10 +24,10 @@ def readfq(fp): # this is a generator function
                 leng += len(l) - 1
                 if leng >= len(seq): # have read enough quality
                     last = None
-                    yield name, seq, ''.join(seqs); # yield a fastq record
+                    yield name, extra_info, seq, ''.join(seqs); # yield a fastq record
                     break
             if last: # reach EOF before reading enough quality
-                yield name, seq, None # yield a fasta record instead
+                yield name, extra_info, seq, None # yield a fasta record instead
                 break
 
 if __name__ == "__main__":
